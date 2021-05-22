@@ -301,35 +301,35 @@ func TestAppFrameworkApplyStandaloneShouldNotFail(t *testing.T) {
 		},
 		Spec: enterprisev1.StandaloneSpec{
 			Replicas: 1,
-			AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
-				VolList: []enterprisev1.VolumeSpec{
-					{Name: "msos_s2s3_vol", Endpoint: "https://s3-eu-west-2.amazonaws.com", Path: "testbucket-rs-london", SecretRef: "s3-secret", Type: "s3", Provider: "aws"},
-				},
-				AppSources: []enterprisev1.AppSourceSpec{
-					{Name: "adminApps",
-						Location: "adminAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
-					},
-					{Name: "securityApps",
-						Location: "securityAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
-					},
-					{Name: "authenticationApps",
-						Location: "authenticationAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
-					},
-				},
-			},
 			// TODO gaurav: Remove this dependency on mock setting and try to use
 			// mock client for S3 responses.
 			CommonSplunkSpec: enterprisev1.CommonSplunkSpec{
 				Mock: true,
+				AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
+					VolList: []enterprisev1.VolumeSpec{
+						{Name: "msos_s2s3_vol", Endpoint: "https://s3-eu-west-2.amazonaws.com", Path: "testbucket-rs-london", SecretRef: "s3-secret", Type: "s3", Provider: "aws"},
+					},
+					AppSources: []enterprisev1.AppSourceSpec{
+						{Name: "adminApps",
+							Location: "adminAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
+						{Name: "securityApps",
+							Location: "securityAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
+						{Name: "authenticationApps",
+							Location: "authenticationAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
+					},
+				},
 			},
 		},
 	}

@@ -363,28 +363,30 @@ func TestHandleAppRepoChanges(t *testing.T) {
 		},
 		Spec: enterprisev1.StandaloneSpec{
 			Replicas: 1,
-			AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
-				VolList: []enterprisev1.VolumeSpec{
-					{Name: "msos_s2s3_vol", Endpoint: "https://s3-eu-west-2.amazonaws.com", Path: "testbucket-rs-london", SecretRef: "s3-secret"},
-				},
-				AppSources: []enterprisev1.AppSourceSpec{
-					{Name: "adminApps",
-						Location: "adminAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
+			CommonSplunkSpec: enterprisev1.CommonSplunkSpec{
+				AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
+					VolList: []enterprisev1.VolumeSpec{
+						{Name: "msos_s2s3_vol", Endpoint: "https://s3-eu-west-2.amazonaws.com", Path: "testbucket-rs-london", SecretRef: "s3-secret"},
 					},
-					{Name: "securityApps",
-						Location: "securityAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
-					},
-					{Name: "authenticationApps",
-						Location: "authenticationAppsRepo",
-						AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
-							VolName: "msos_s2s3_vol",
-							Scope:   "local"},
+					AppSources: []enterprisev1.AppSourceSpec{
+						{Name: "adminApps",
+							Location: "adminAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
+						{Name: "securityApps",
+							Location: "securityAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
+						{Name: "authenticationApps",
+							Location: "authenticationAppsRepo",
+							AppSourceDefaultSpec: enterprisev1.AppSourceDefaultSpec{
+								VolName: "msos_s2s3_vol",
+								Scope:   "local"},
+						},
 					},
 				},
 			},

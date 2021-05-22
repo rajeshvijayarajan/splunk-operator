@@ -69,32 +69,32 @@ func ApplyStandalone(client splcommon.ControllerClient, cr *enterprisev1.Standal
 		cr.Status.SmartStore = cr.Spec.SmartStore
 	}
 
-	if cr.Spec.CommonSplunkSpec.Mock != true && !reflect.DeepEqual(cr.Status.AppContext.AppFrameworkConfig, cr.Spec.AppFrameworkConfig) {
+	if cr.Spec.CommonSplunkSpec.Mock != true && !reflect.DeepEqual(cr.Status.AppContext.AppFrameworkConfig, cr.Spec.CommonSplunkSpec.AppFrameworkConfig) {
 		var sourceToAppsList map[string]splclient.S3Response
 
-		for _, vol := range cr.Spec.AppFrameworkConfig.VolList {
+		for _, vol := range cr.Spec.CommonSplunkSpec.AppFrameworkConfig.VolList {
 			if _, ok := splclient.S3Clients[vol.Provider]; !ok {
 				splclient.RegisterS3Client(vol.Provider)
 			}
 		}
 
-		sourceToAppsList = GetAppListFromS3Bucket(client, cr, &cr.Spec.AppFrameworkConfig)
-		if len(sourceToAppsList) != len(cr.Spec.AppFrameworkConfig.AppSources) {
+		sourceToAppsList = GetAppListFromS3Bucket(client, cr, &cr.Spec.CommonSplunkSpec.AppFrameworkConfig)
+		if len(sourceToAppsList) != len(cr.Spec.CommonSplunkSpec.AppFrameworkConfig.AppSources) {
 			scopedLog.Error(err, "Unable to get apps list for all the app sources from remote storage")
 			return result, err
 		}
 
-		for _, appSource := range cr.Spec.AppFrameworkConfig.AppSources {
+		for _, appSource := range cr.Spec.CommonSplunkSpec.AppFrameworkConfig.AppSources {
 			scopedLog.Info("Apps List retrieved from remote storage", "App Source", appSource.Name, "Content", sourceToAppsList[appSource.Name].Objects)
 		}
 
-		err = handleAppRepoChanges(client, cr, &cr.Status.AppContext, sourceToAppsList, &cr.Spec.AppFrameworkConfig)
+		err = handleAppRepoChanges(client, cr, &cr.Status.AppContext, sourceToAppsList, &cr.Spec.CommonSplunkSpec.AppFrameworkConfig)
 		if err != nil {
 			scopedLog.Error(err, "Unable to use the App list retrieved from the remote storage")
 			return result, err
 		}
 
-		cr.Status.AppContext.AppFrameworkConfig = cr.Spec.AppFrameworkConfig
+		cr.Status.AppContext.AppFrameworkConfig = cr.Spec.CommonSplunkSpec.AppFrameworkConfig
 	}
 
 	cr.Status.Selector = fmt.Sprintf("app.kubernetes.io/instance=splunk-%s-standalone", cr.GetName())

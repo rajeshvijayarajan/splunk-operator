@@ -104,6 +104,9 @@ type CommonSplunkSpec struct {
 	// If not specified uses the default serviceAccount for the namespace as per
 	// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
 	ServiceAccount string `json:"serviceAccount"`
+
+	// Splunk Enterprise App repository. Specifies remote App location and scope for Splunk App management
+	AppFrameworkConfig AppFrameworkSpec `json:"appRepo,omitempty"`
 }
 
 // StorageClassSpec defines storage class configuration

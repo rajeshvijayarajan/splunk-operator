@@ -31,9 +31,6 @@ import (
 // LicenseMasterSpec defines the desired state of a Splunk Enterprise license master.
 type LicenseMasterSpec struct {
 	CommonSplunkSpec `json:",inline"`
-
-	// Splunk enterprise App repository. Specifies remote App location and scope for Splunk App management
-	AppFrameworkConfig AppFrameworkSpec `json:"appRepo,omitempty"`
 }
 
 // LicenseMasterStatus defines the observed state of a Splunk Enterprise license master.

@@ -16,7 +16,6 @@ package enterprise
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -33,15 +32,6 @@ import (
 
 // kubernetes logger used by splunk.enterprise package
 var log = logf.Log.WithName("splunk.enterprise")
-
-// regex to extract the region from the s3 endpoint
-var regionRegex = ".*.s3[-,.](?P<region>.*).amazonaws.com"
-
-//getRegion extracts the region from the endpoint field
-func getRegion(endpoint string) string {
-	pattern := regexp.MustCompile(regionRegex)
-	return pattern.FindStringSubmatch(endpoint)[1]
-}
 
 // GetRemoteStorageClient returns the corresponding S3Client
 func GetRemoteStorageClient(client splcommon.ControllerClient, cr splcommon.MetaObject, appFrameworkRef *enterprisev1.AppFrameworkSpec, vol *enterprisev1.VolumeSpec, location string) (splclient.S3Client, error) {
@@ -71,7 +61,7 @@ func GetRemoteStorageClient(client splcommon.ControllerClient, cr splcommon.Meta
 	}
 
 	// Get region from "endpoint" field
-	region := getRegion(vol.Endpoint)
+	//region := getRegion(vol.Endpoint)
 
 	// Get the bucket name form the "path" field
 	bucket := strings.Split(vol.Path, "/")[0]
@@ -79,7 +69,7 @@ func GetRemoteStorageClient(client splcommon.ControllerClient, cr splcommon.Meta
 	//Get the prefix from the "path" field
 	prefix := strings.TrimPrefix(vol.Path, bucket+"/") + location
 
-	return getClient(region, bucket, accessKeyID, secretAccessKey, prefix, prefix /* startAfter*/), nil
+	return getClient(bucket, accessKeyID, secretAccessKey, prefix, prefix /* startAfter*/, vol.Endpoint), nil
 }
 
 // ApplySplunkConfig reconciles the state of Kubernetes Secrets, ConfigMaps and other general settings for Splunk Enterprise instances.
