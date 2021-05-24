@@ -60,9 +60,6 @@ func GetRemoteStorageClient(client splcommon.ControllerClient, cr splcommon.Meta
 		return nil, err
 	}
 
-	// Get region from "endpoint" field
-	//region := getRegion(vol.Endpoint)
-
 	// Get the bucket name form the "path" field
 	bucket := strings.Split(vol.Path, "/")[0]
 
@@ -619,4 +616,100 @@ func markAppsStatusToComplete(appSrcDeplymentStatus map[string]enterprisev1.AppS
 	// ToDo: sgontla: Caller of this API also needs to set "IsDeploymentInProgress = false" once after completing this function call for all the app sources
 
 	return err
+}
+
+// setupAppInitContainers creates the necessary shared volume and init containers to download all
+// app packages in the appSources configured and make them locally available to the Splunk instance.
+func setupAppInitContainers(client splcommon.ControllerClient, cr splcommon.MetaObject, podTemplateSpec *corev1.PodTemplateSpec, appFrameworkConfig *enterprisev1.AppFrameworkSpec) {
+	// Create shared volume and init containers for App Framework
+	if len(appFrameworkConfig.AppSources) > 0 {
+		// Create volume to shared between init and Splunk container to contain downloaded apps
+		emptyVolumeSource := corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		}
+
+		initVol := corev1.Volume{
+			Name:         appVolumeMntName,
+			VolumeSource: emptyVolumeSource,
+		}
+
+		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, initVol)
+
+		// Add init apps mount to Splunk container
+		initVolumeSpec := corev1.VolumeMount{
+			Name:      appVolumeMntName,
+			MountPath: appBktMnt,
+		}
+
+		// This assumes the Splunk instance container is Containers[0], which I *believe* is valid
+		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, initVolumeSpec)
+
+		// Add app framework init containers per app source and attach the init volume
+		for i, appSrc := range appFrameworkConfig.AppSources {
+			// Get volume info from appSrc
+			volSpecPos, err := checkIfVolumeExists(appFrameworkConfig.VolList, appSrc.VolName)
+			if err != nil {
+				// Invalid appFramework config.  This shouldn't happen
+				continue
+			}
+			appRepoVol := appFrameworkConfig.VolList[volSpecPos]
+
+			// Use the provider name to get the corresponding function pointer
+			s3Client, err := GetRemoteStorageClient(client, cr, appFrameworkConfig, &appRepoVol, appSrc.Location)
+			if err != nil {
+				// move on to the next appSource if we are not able to get the required client
+				continue
+			}
+
+			// Prepare app source/repo values
+			appBkt := appRepoVol.Path
+			appS3Endpoint := appRepoVol.Endpoint
+			appSecretRef := appRepoVol.SecretRef
+			appName := appSrc.Name
+			appPath := appSrc.Location
+			appScope := appSrc.Scope
+			initContainerName := fmt.Sprintf(initContainerTemplate, appName, i, appScope)
+
+			// Setup init container
+			initContainerSpec := corev1.Container{
+				Image:           s3Client.GetInitContainerImage(),
+				ImagePullPolicy: "IfNotPresent",
+				Name:            initContainerName,
+				Args:            s3Client.GetInitContainerCmd(appS3Endpoint, appBkt, appPath, appName, appBktMnt),
+				Env: []corev1.EnvVar{
+					{
+						Name: "AWS_ACCESS_KEY_ID",
+						ValueFrom: &corev1.EnvVarSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: appSecretRef,
+								},
+								Key: s3AccessKey,
+							},
+						},
+					},
+					{
+						Name: "AWS_SECRET_ACCESS_KEY",
+						ValueFrom: &corev1.EnvVarSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: appSecretRef,
+								},
+								Key: s3SecretKey,
+							},
+						},
+					},
+				},
+			}
+
+			// Add mount to initContainer, same mount used for Splunk instance container as well
+			initContainerSpec.VolumeMounts = []corev1.VolumeMount{
+				{
+					Name:      appVolumeMntName,
+					MountPath: appBktMnt,
+				},
+			}
+			podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, initContainerSpec)
+		}
+	}
 }

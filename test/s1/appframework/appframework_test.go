@@ -74,12 +74,12 @@ var _ = Describe("s1appfw test", func() {
 						ImagePullPolicy: "Always",
 					},
 					Volumes: []corev1.Volume{},
-					AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
-						Defaults:             appFrameworkSpec.Defaults,
-						AppsRepoPollInterval: appFrameworkSpec.AppsRepoPollInterval,
-						VolList:              appFrameworkSpec.VolList,
-						AppSources:           appFrameworkSpec.AppSources,
-					},
+				},
+				AppFrameworkConfig: enterprisev1.AppFrameworkSpec{
+					Defaults:             appFrameworkSpec.Defaults,
+					AppsRepoPollInterval: appFrameworkSpec.AppsRepoPollInterval,
+					VolList:              appFrameworkSpec.VolList,
+					AppSources:           appFrameworkSpec.AppSources,
 				},
 			}
 
